@@ -1,0 +1,5 @@
+name,value,note
+store_shipping_first_unit,5.40,What the company pays to ship a store order (USD)
+store_shipping_extra_unit,0.60,Extra shipping cost for each additional unit (USD)
+payment_fee_rate,0.029,Card processing fee as a share of the order total
+payment_fee_fixed,0.30,Fixed card processing fee per order (USD)

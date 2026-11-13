@@ -1,0 +1,32 @@
+-- Every cleaning step and how many rows it touched, so nothing is fixed silently
+select * from (values
+  ('Store orders', 'Duplicate rows from webhook retries',
+     (select count(*) from {{ source('raw', 'shopify_orders') }}) - (select count(*) from {{ ref('stg_shopify_orders') }}), 'Kept one row per order'),
+  ('Store orders', 'Test orders',
+     (select count(*) from {{ ref('stg_shopify_orders') }} where is_test), 'Excluded from sales'),
+  ('Store orders', 'Timestamps exported in UTC instead of Eastern time',
+     (select count(*) from {{ ref('stg_shopify_orders') }} where was_utc_format), 'Parsed and converted to the Eastern time business day'),
+  ('Store orders', 'Orders in Canadian dollars',
+     (select count(*) from {{ ref('int_store_orders') }} where currency = 'CAD'), 'Converted to US dollars with the monthly rate'),
+  ('Store order lines', 'SKUs in lower case or with trailing spaces',
+     (select count(*) from {{ source('raw', 'shopify_order_lines') }} where sku <> upper(trim(sku))), 'Standardised'),
+  ('Store order lines', 'Old SKU name BB-CREAM-UNSC (before July 2025)',
+     (select count(*) from {{ source('raw', 'shopify_order_lines') }} where upper(trim(sku)) = 'BB-CREAM-UNSC'), 'Mapped to BB-CRM-UNS (sku_aliases seed)'),
+  ('Amazon orders', 'Orders on an old listing missing from the SKU map',
+     (select count(*) from {{ ref('stg_amazon_orders') }} where seller_sku = 'BB-CRM-UNS-6OZ'), 'Mapped to BB-CRM-UNS (manual override seed)'),
+  ('Amazon orders', 'Cancelled orders',
+     (select count(*) from {{ ref('stg_amazon_orders') }} where order_status = 'Cancelled'), 'Excluded from sales'),
+  ('Amazon refunds', 'Amounts in cents',
+     (select count(*) from {{ ref('stg_amazon_returns') }}), 'Divided by 100'),
+  ('Store refunds', 'Refunds for orders placed before April 2025',
+     (select count(*) from {{ ref('int_refunds') }} where has_no_matching_order), 'Kept as refunds, flagged as having no matching order'),
+  ('Products', 'Bundles with no unit cost',
+     (select count(*) from {{ ref('int_product_costs') }} where cost_source = 'Sum of bundle components'), 'Cost worked out from components'),
+  ('Ad spend', 'Google cost in micros',
+     (select count(*) from {{ source('raw', 'google_ads') }}), 'Divided by 1,000,000'),
+  ('Ad spend', 'Meta spend with thousands separators and US date format',
+     (select count(*) from {{ source('raw', 'meta_ads') }}), 'Parsed to numbers and dates'),
+  ('Inventory', 'Missing weekly warehouse counts',
+     (select count(*) from {{ ref('stg_inventory_snapshots') }} where location = 'Amazon FBA')
+       - (select count(*) from {{ ref('stg_inventory_snapshots') }} where location = 'Warehouse'), 'Left missing, not guessed')
+) as t(source_table, issue, rows_affected, action)

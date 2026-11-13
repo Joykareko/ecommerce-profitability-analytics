@@ -1,0 +1,42 @@
+version: 2
+models:
+  - name: int_sku_map
+    description: Every Amazon listing mapped to one canonical SKU.
+    columns:
+      - name: seller_sku
+        tests: [unique, not_null]
+  - name: int_product_costs
+    columns:
+      - name: sku
+        tests: [unique, not_null]
+      - name: unit_cost
+        description: From the product master, or the sum of components for bundles.
+        tests: [not_null]
+  - name: int_store_orders
+    description: Real store orders in US dollars, test orders removed.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: fx_rate
+        tests: [not_null]
+  - name: int_order_lines
+    description: One row per product sold across both channels, in US dollars, with costs for contribution margin.
+    columns:
+      - name: channel
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Store', 'Amazon']
+      - name: sku
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_product_costs')
+                field: sku
+      - name: cogs
+        tests: [not_null]
+  - name: int_refunds
+    columns:
+      - name: sku
+        tests: [not_null]

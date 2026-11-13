@@ -1,0 +1,22 @@
+version: 2
+sources:
+  - name: raw
+    description: Raw exports, read straight from data/raw as text so every type is set deliberately in staging.
+    meta:
+      external_location: "read_csv('../data/raw/{name}.csv', header=true, all_varchar=true)"
+    tables:
+      - name: products
+      - name: bundle_components
+      - name: shopify_orders
+      - name: shopify_order_lines
+      - name: shopify_refunds
+      - name: subscriptions
+      - name: amazon_orders
+      - name: amazon_sku_map
+      - name: amazon_returns
+      - name: inventory_snapshots
+      - name: meta_ads
+      - name: google_ads
+      - name: tiktok_ads
+      - name: amazon_ads
+      - name: fx_rates

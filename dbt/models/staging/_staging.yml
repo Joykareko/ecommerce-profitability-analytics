@@ -1,0 +1,63 @@
+version: 2
+models:
+  - name: stg_products
+    description: Product master, one row per SKU.
+    columns:
+      - name: sku
+        tests: [unique, not_null]
+      - name: brand
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Brisk & Bold', 'Curvella', 'SoleFresh']
+  - name: stg_shopify_orders
+    description: Store orders after removing webhook duplicates. Test orders are flagged, not yet removed.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: created_at_utc
+        description: Order time in UTC, parsed from two different timestamp styles.
+        tests: [not_null]
+      - name: currency
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['USD', 'CAD']
+      - name: is_test
+        description: True only for test orders. Must never be NULL, or real orders would be dropped.
+        tests: [not_null]
+  - name: stg_shopify_order_lines
+    columns:
+      - name: sku
+        description: Cleaned SKU (upper case, trimmed, old names mapped through the sku_aliases seed).
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: sku
+      - name: quantity
+        tests: [not_null]
+  - name: stg_amazon_orders
+    columns:
+      - name: amazon_order_id
+        tests: [unique, not_null]
+      - name: order_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Shipped', 'Cancelled']
+  - name: stg_amazon_returns
+    columns:
+      - name: refund_amount
+        description: Converted from cents to dollars.
+        tests: [not_null]
+  - name: stg_ad_spend
+    columns:
+      - name: platform
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Meta', 'Google', 'TikTok', 'Amazon Ads']
+      - name: spend
+        tests: [not_null]

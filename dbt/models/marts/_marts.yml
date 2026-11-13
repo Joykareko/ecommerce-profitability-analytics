@@ -1,0 +1,49 @@
+version: 2
+models:
+  - name: fct_contribution_margin
+    description: CM1, CM2 and CM3 by month, channel, brand and SKU. See the SQL header for definitions.
+    columns:
+      - name: month
+        tests: [not_null]
+      - name: channel
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Store', 'Amazon']
+      - name: brand
+        tests: [not_null]
+  - name: fct_marketing_monthly
+    description: Spend, platform claims, new customers, CAC, ROAS, TACoS and ACoS by month and platform.
+    columns:
+      - name: platform
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Meta', 'Google', 'TikTok', 'Amazon Ads', 'Organic']
+  - name: fct_subscriptions_monthly
+    columns:
+      - name: month
+        tests: [unique, not_null]
+  - name: fct_revenue_reconciliation
+    columns:
+      - name: month
+        tests: [unique, not_null]
+  - name: fct_inventory_cover
+    columns:
+      - name: sku
+        tests: [not_null]
+  - name: meta_cleaning_log
+    description: Every cleaning step and the number of rows it affected.
+  - name: fct_customers
+    description: One row per store customer with acquisition channel, first product, value and segment.
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: segment
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Active subscriber', 'New customer', 'Loyal repeat buyer', 'Lapsed subscriber', 'Returning buyer', 'One-time buyer', 'Drifting away']
+  - name: fct_customer_ltv
+    description: Average CM2 per customer in the first 3, 6 and 12 months, by acquisition channel, first product and market.
