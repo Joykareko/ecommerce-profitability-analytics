@@ -45,7 +45,7 @@ Two inputs the raw data does not contain are written down as **seeds** rather th
 ## How it works
 
 ```
-data/raw (15 exports)  ->  dbt staging (13 models)  ->  intermediate (5)  ->  marts (9)  ->  data/processed  ->  Power BI
+data/raw (15 exports)  ->  dbt staging (12 models)  ->  intermediate (5)  ->  marts (9)  ->  data/processed  ->  Power BI
                            clean and type each file     canonical SKUs,       margin, marketing,
                                                         costs, USD lines      customers, stock
 ```
